@@ -31,7 +31,6 @@ class CFGBuilder(ast.NodeVisitor):
         if src is not None:
             self.edges.append((src, dst))
 
-    
     # entry
     def build(self, tree: ast.AST):
         entry = self.new_node("ENTRY")
@@ -49,12 +48,9 @@ class CFGBuilder(ast.NodeVisitor):
 
         return self.nodes, self.edges
     
-
     def visit_Module(self, node: ast.Module):
         for stmt in node.body:
             self.visit(stmt)
-
-    
 
     def generic_statement(self, node, label=None):
         # if there's no label given, choose code instead
@@ -66,7 +62,6 @@ class CFGBuilder(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign):
         self.generic_statement(node)
         
-
     def visit_AugAssign(self, node: ast.AugAssign):
         # for operations like 'index += 1'
         self.generic_statement(node)
@@ -87,19 +82,17 @@ class CFGBuilder(ast.NodeVisitor):
         if_node = self.new_node(condition_text)
         self.connect(self.current, if_node)
         
-        # THEN
         self.current = if_node
         for stmt in node.body:
             self.visit(stmt)
         then_end = self.current
 
-        # ELSE
         self.current = if_node
         for stmt in node.orelse:
             self.visit(stmt)
         else_end = self.current
 
-        # MERGE
+        """
         merge = self.new_node("Merge")
 
         if then_end:
@@ -107,7 +100,7 @@ class CFGBuilder(ast.NodeVisitor):
         if else_end:
             self.connect(else_end, merge)
 
-        self.current = merge
+        self.current = merge """
 
     # ---------- WHILE ----------
     def visit_While(self, node: ast.While):

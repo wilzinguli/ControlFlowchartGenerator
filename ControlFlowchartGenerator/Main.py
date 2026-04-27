@@ -1,60 +1,64 @@
 import ast
+import sys
+import os
 from Parser import CFGBuilder
 from CfgBuilder import CfgDiagrammBuilder
-import os
-import platform
 
-if platform.system() == "Windows":
-    # Typische Installationspfade von Graphviz unter Windows
-    possible_paths = [
-        r"C:\Program Files\Graphviz\bin",
-        r"C:\Program Files (x86)\Graphviz\bin",
-        # Falls es über winget/choco installiert wurde, liegt es oft hier:
-        os.path.expandvars(r"%LOCALAPPDATA%\bin\Graphviz\bin") 
-    ]
+def get_input_code():
+    """Handles user input from file path or direct console entry."""
+    print("=== Python CFG Generator ===")
+    print("Option 1: Enter a path to a .py file")
+    print("Option 2: Paste code directly (type 'EOF' on a new line to finish)")
     
-    for path in possible_paths:
-        if os.path.exists(path):
-            os.environ["PATH"] += os.pathsep + path
-            break
+    user_input = input("\nInput: ").strip()
 
-code = """
-results = []
-index = 0
+    # Check if input is a valid file path
+    if os.path.isfile(user_input):
+        try:
+            with open(user_input, "r", encoding="utf-8") as f:
+                return f.read()
+        except Exception as e:
+            print(f"Error reading file: {e}")
+            return None
+    else:
+        # Multi-line input mode
+        print("Direct mode: Paste your code (type 'EOF' to confirm):")
+        lines = [user_input]
+        while True:
+            line = sys.stdin.readline()
+            if line.strip() == "EOF":
+                break
+            lines.append(line)
+        return "".join(lines)
 
-while index < len(data):
-    item = data[index]
+def main():
+    source = get_input_code()
+    if not source or not source.strip():
+        print("No valid code provided. Exiting.")
+        return
+
     try:
-        if item == 0:
-            print("Null gefunden, überspringe...")
-            index += 1
-            continue  # Testet den Rücksprung zur While-Bedingung
+        # Validate syntax
+        tree = ast.parse(source)
         
-        if item == "STOP":
-            break     # Testet den Sprung aus der Schleife zum EXIT
-            
-        res = 10 / item
-        results.append(res)
-        
-    except TypeError:
-        print("Ungültiger Typ!")
-        # Hier könnte man noch ein 'pass' oder Logik einbauen
-        
-    except ZeroDivisionError:
-        print("Division durch Null!")
-        
-    finally:
-        print(f"Verarbeite Index {index}")
-        index += 1
-        
-return results
-"""
-tree = ast.parse(code)
+        # Build logical structure
+        parser = CFGBuilder()
+        nodes, edges = parser.build(tree)
 
-parser = CFGBuilder()
-nodes, edges = parser.build(tree) 
+        # Generate visualization
+        diagram_builder = CfgDiagrammBuilder()
+        graph = diagram_builder.createGraph(nodes, edges)
 
-viz = CfgDiagrammBuilder()
-graph = viz.createGraph(nodes, edges)
+        # Render and save
+        output_file = "cfg_output"
+        graph.render(output_file, format="png", cleanup=True, view=True)
+        print(f"\nSuccess! Diagram saved as '{output_file}.png'.")
+        
+    except SyntaxError as e:
+        print(f"\n[SYNTAX ERROR]: Line {e.lineno}: {e.msg}")
+        print(f"Offending code: {e.text.strip() if e.text else ''}")
+    except Exception as e:
+        print(f"\n[ERROR]: {e}")
 
-graph.render('kontrollfluss_diagramm', format='png', cleanup=True, view=True)
+if __name__ == "__main__":
+    main()
