@@ -51,7 +51,7 @@ def main():
 
         # Render and save
         output_file = "cfg_output"
-        graph.render(output_file, format="png", cleanup=True, view=True)
+        graph.render("cfg_output", format="png", cleanup=True, view=False)
         print(f"\nSuccess! Diagram saved as '{output_file}.png'.")
         
     except SyntaxError as e:
