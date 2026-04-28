@@ -15,7 +15,7 @@ Replace `$(pwd)` with `${PWD}` on Windows PowerShell.
 `docker run -it -v ${PWD}:/app cfg-generator`
 
 ### Command Prompt (Windows):
-`docker run -it -v %cd%:/app cfg-generator`
+`docker run -it -v ${PWD}:/app cfg-generator`
 
 ## Notes
 - The 'view=True' setting in the script might attempt to open a window. 
